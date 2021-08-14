@@ -35,8 +35,8 @@ app.get('/dashboard', (req, res) => {
 });
 
 app.post('/api/v1/upload', async (req, res) => {
-	if(!['RayhanADev'].includes(req.headers['X-Replit-Username'])) {
-		res.status(403).send({
+	if(!['RayhanADev'].includes(req.headers['x-replit-user-name'])) {
+		return res.status(403).send({
 			status: 403,
 			message: 'You are not logged in.'
 		});
@@ -44,7 +44,7 @@ app.post('/api/v1/upload', async (req, res) => {
 
 	try {
 		if (!req.files || Object.keys(req.files).length === 0) {
-			res.status(400).send({
+			return res.status(400).send({
 				status: 400,
 				message: 'No file uploaded.'
 			});
@@ -52,7 +52,7 @@ app.post('/api/v1/upload', async (req, res) => {
 			let upload = req.files.upload;
 
 			if(sanitize(upload.name) !== upload.name) {
-				res.status(400).send({
+				return res.status(400).send({
 					status: 400,
 					message: 'Filename contains unsafe content'
 				});
@@ -61,31 +61,32 @@ app.post('/api/v1/upload', async (req, res) => {
 			let folder = 
 				req.body.folder &&
 				['dev', 'personal', 'school'].includes(req.body.folder) &&
-				['RayhanADev'].includes(req.headers['X-Replit-Username']) ?
+				['RayhanADev'].includes(req.headers['x-replit-user-name']) ?
 					__dirname + `/files/${req.body.folder}/` + upload.name :
 					__dirname + '/files/public/' + upload.name
 
 			if(fs.existsSync(folder)) {
-				res.status(409).send({
+				return res.status(409).send({
 					status: 409,
 					message: 'Resource already exists at given location.'
-				})
+				});
 			}
 
 			upload.mv(folder);
 
-			res.status(200).send({
+			return res.status(200).send({
 				status: 200,
 				message: 'File is uploaded.',
 				data: {
 					name: upload.name,
 					mimetype: upload.mimetype,
-					size: upload.size
+					size: upload.size,
+					location: 'https://edge.rayhanadev.repl.co/' + folder.replace(__dirname + '/files/', '')
 				}
 			});
 		}
 	} catch (err) {
-		res.status(500).send(err);
+		return res.status(500).send(err);
 	}
 });
 

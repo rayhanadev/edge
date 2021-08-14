@@ -242,17 +242,13 @@
 			var uploadBtn = document.getElementById('uploadBtn');
 			var submitBtn = document.getElementById('submitBtn');
 			var statusText = document.getElementById('status');
-			var replAuthCookie = Boolean(String(document.cookie)
-				.split('; ')
-				.find((row) => row.startsWith('AUTHED='))
-				?.split('=')[1]) || false;
 
 			function setStatus(message) {
 				statusText.innerText = message;
 				setTimeout(() => statusText.innerText = "", 10000);
 			};
 
-			function replAuth() {
+			function replAuth(callback) {
 				const width = 350;
 				const height = 500;
 				const left = (window.screen.width / 2) - (width / 2);
@@ -264,6 +260,8 @@
 					if (event.data !== 'auth_complete') return;
 					window.removeEventListener('message', this);
 					authWindow.close();
+
+					if(callback) callback();
 				});
 			}
 
@@ -281,7 +279,7 @@
 				.then((data) => {
 					switch(data.status) {
 						case 200: {
-							setStatus('Successfully uploaded file to edge!');
+							setStatus('Successfully uploaded file to edge!\nAvailable at ' + data.data.location + '.');
 							break;
 						}
 						case 400: {
@@ -312,15 +310,11 @@
 			};
 
 			submitBtn.addEventListener('click', (event) => {
-				if(!replAuthCookie) {
-					replAuth();
-					document.cookie = 'AUTHED=true'
-				}
-				sendFile();
+				replAuth(sendFile);
 			});
 
-			upload.addEventListener('change', (event) => {
-				if(event.target.files.length > 0) {
+			upload.addEventListener('change', () => {
+				if(upload.files.length > 0) {
 					upload.style['background-position'] = '0 -100%';
 					upload.style['color'] = 'black';
 				} else {
