@@ -19,6 +19,11 @@ const app = express();
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
+const WHITELISTED_USERS = ['RayhanADev'];
+
+const { REPL_SLUG, REPL_OWNER } = process.env;
+const HOST_URL = REPL_SLUG && REPL_OWNER ? `https://${REPL_SLUG.toLowerCase()}.${REPL_OWNER.toLowerCase()}.repl.co/` : '/';
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -35,7 +40,7 @@ app.get('/dashboard', (req, res) => {
 });
 
 app.post('/api/v1/upload', async (req, res) => {
-	if(!['RayhanADev'].includes(req.headers['x-replit-user-name'])) {
+	if(WHITELISTED_USERS.length > 0 ? !WHITELISTED_USERS.includes(req.headers['x-replit-user-name']) : false) {
 		return res.status(403).send({
 			status: 403,
 			message: 'You are not logged in.'
@@ -60,8 +65,7 @@ app.post('/api/v1/upload', async (req, res) => {
 
 			let folder = 
 				req.body.folder &&
-				['dev', 'personal', 'school'].includes(req.body.folder) &&
-				['RayhanADev'].includes(req.headers['x-replit-user-name']) ?
+				['dev', 'personal', 'school'].includes(req.body.folder) ?
 					__dirname + `/files/${req.body.folder}/` + upload.name :
 					__dirname + '/files/public/' + upload.name
 
@@ -81,7 +85,7 @@ app.post('/api/v1/upload', async (req, res) => {
 					name: upload.name,
 					mimetype: upload.mimetype,
 					size: upload.size,
-					location: 'https://edge.rayhanadev.repl.co/' + folder.replace(__dirname + '/files/', '')
+					location: HOST_URL + folder.replace(__dirname + '/files/', '')
 				}
 			});
 		}
