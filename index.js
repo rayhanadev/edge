@@ -97,7 +97,7 @@ app.post('/api/v1/upload', async (req, res) => {
 app.get('*', async (req, res) => {
 	try {
 		const localPath = './files' + req.path;
-		if (fs.existsSync(localPath)) {
+		if (fs.existsSync(localPath) && fs.lstatSync(localPath).isFile()) {
 			const readStream = fs.createReadStream(localPath);
 			const { stream, mime: streamMimeType } = await streamMime(readStream, {
 				fileName: req.path.split('/').slice(-1)[0],
