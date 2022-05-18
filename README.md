@@ -4,7 +4,7 @@
 
 <p align="center">
 	<a href="https://edge.furret.codes">
-		<img src="[https://edge.rayhanadev.repl.co/public/edge-screenshot.jpg](https://edge.furret.codes/f/edge-screenshot.jpeg)" alt="edge screenshot">
+		<img src="https://edge.furret.codes/f/edge-screenshot.jpeg" alt="edge screenshot">
 	</a>
 </p>
 
