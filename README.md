@@ -3,8 +3,8 @@
 </a>
 
 <p align="center">
-	<a href="https://edge.rayhanadev.repl.co">
-		<img src="https://edge.rayhanadev.repl.co/public/edge-screenshot.jpg" alt="edge screenshot">
+	<a href="https://edge.furret.codes">
+		<img src="[https://edge.rayhanadev.repl.co/public/edge-screenshot.jpg](https://edge.furret.codes/f/edge-screenshot.jpeg)" alt="edge screenshot">
 	</a>
 </p>
 

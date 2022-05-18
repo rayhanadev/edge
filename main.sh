@@ -13,4 +13,4 @@ else
 fi
 clear
 echo "Running main script."
-yarn start
+yarn dev

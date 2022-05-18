@@ -2,10 +2,9 @@
   "type": "module",
   "scripts": {
 		"start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon --ext js,json,html index.js "
   },
   "dependencies": {
-    "clear": "^0.1.0",
     "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
     "express": "^4.17.1",
