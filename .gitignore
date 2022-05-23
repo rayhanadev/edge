@@ -28,8 +28,12 @@ yarn-error.log*
 .env.build
 
 # replit
+.breakpoints
 .replit
 replit.nix
+.upm
+.config
+.cache
 
 # extra
 /files/

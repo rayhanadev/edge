@@ -13,52 +13,58 @@ const app = express();
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import fileUpload from 'express-fileupload';
+import compression from 'compression';
+import morgan from 'morgan';
 
 import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Add your Replit username, and those with whom you'd like to share
+// to provide access to your dashboard. Use an empty array to allow
+// open access to everyone.
 const WHITELISTED_USERS = ['RayhanADev'];
 
-app.use(cors());
+import 'dotenv/config';
+const dev = process.env.NODE_ENV !== 'production';
+
+const isAllowed = (req) => {
+	if (WHITELISTED_USERS.length === 0) return true;
+	else if (WHITELISTED_USERS.includes(req.headers['x-replit-user-name']))
+		return true;
+	return false;
+};
+
+app.use(express.static('assets'));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(fileUpload());
+app.use(morgan('tiny'));
+
+if (!dev) {
+	app.use(cors());
+	app.use(compression());
+}
 
 app.get('/', (req, res) => {
-	if (
-		WHITELISTED_USERS.length > 0
-			? WHITELISTED_USERS.includes(req.headers['x-replit-user-name'])
-			: false
-	) {
-		return res.status(307).redirect('/~');
-	}
-
+	if (isAllowed(req)) return res.status(307).redirect('/~');
 	return res.status(200).sendFile('./views/index.html', { root: __dirname });
-});
-
-app.get('/~', (req, res) => {
-	if (
-		WHITELISTED_USERS.length > 0
-			? !WHITELISTED_USERS.includes(req.headers['x-replit-user-name'])
-			: false
-	) {
-		return res.status(307).redirect('/auth');
-	}
-
-	return res.status(200).sendFile('./views/dashboard.html', { root: __dirname });
 });
 
 app.get('/auth', (req, res) => {
 	res.status(200).sendFile('./views/auth.html', { root: __dirname });
 });
 
-app.post('/api/v1/upload', async (req, res) => {
-	if (
-		WHITELISTED_USERS.length > 0
-			? !WHITELISTED_USERS.includes(req.headers['x-replit-user-name'])
-			: false
-	) {
+app.get('/~', (req, res) => {
+	if (!isAllowed(req)) return res.status(307).redirect('/auth');
+	return res
+		.status(200)
+		.sendFile('./views/dashboard.html', { root: __dirname });
+});
+
+app.post('/api', async (req, res) => {
+	if (!isAllowed(req)) {
 		return res.status(403).send({
 			status: 403,
 			message: 'You are not logged in.',
@@ -78,11 +84,12 @@ app.post('/api/v1/upload', async (req, res) => {
 			if (sanitize(name) !== name) {
 				return res.status(400).send({
 					status: 400,
-					message: 'Filename contains unsafe content',
+					message: 'Filename contains unsafe content.',
 				});
 			}
 
-			const folder = __dirname + '/files/' + name + path.extname(upload.name);
+			const folder =
+				__dirname + '/files/' + name + path.extname(upload.name);
 
 			if (fs.existsSync(folder)) {
 				return res.status(409).send({
@@ -100,7 +107,9 @@ app.post('/api/v1/upload', async (req, res) => {
 					name: name,
 					mimetype: upload.mimetype,
 					size: upload.size,
-					location: `${req.hostname}/f/${name + path.extname(upload.name)}`,
+					location: `${req.hostname}/f/${
+						name + path.extname(upload.name)
+					}`,
 				},
 			});
 		}
@@ -114,9 +123,12 @@ app.get('/f/:path', async (req, res) => {
 		const localPath = './files/' + req.params.path;
 		if (fs.existsSync(localPath)) {
 			const readStream = fs.createReadStream(localPath);
-			const { stream, mime: streamMimeType } = await streamMime(readStream, {
-				fileName: req.params.path.split('/').slice(-1)[0],
-			});
+			const { stream, mime: streamMimeType } = await streamMime(
+				readStream,
+				{
+					fileName: req.params.path.split('/').slice(-1)[0],
+				},
+			);
 
 			const extMimeType = extMime(localPath);
 			const binaryFile = isBinaryFileSync(localPath);
@@ -136,7 +148,10 @@ app.get('/f/:path', async (req, res) => {
 			res.status(200);
 			res.header('Content-Type', finalMimeType);
 			res.header('Content-Disposition', 'inline');
-			res.header('Cache-Control', 'public, max-age=1, stale-while-revalidate=59');
+			res.header(
+				'Cache-Control',
+				'public, max-age=1, stale-while-revalidate=59',
+			);
 			stream.pipe(res);
 		} else {
 			res.status(404).sendFile('./views/404.html', { root: __dirname });
